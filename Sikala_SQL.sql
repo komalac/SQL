@@ -2,9 +2,11 @@ use sakila;
 
 /******1. Query First & Last name from actor table*******/
 
+#Display first & last names of all actores
 select first_name, last_name 
 from actor;
 
+#Display the first and last name of each actor in a single column in upper case letters
 select concat(first_name, ' ', last_name) 
 as 'Actor Name' 
 from actor;
@@ -12,19 +14,25 @@ from actor;
 
 
 /*************2. Query with Where condition**************/
+
+#display id, first_name, last_name of actor whose first name is Joe
 select actor_id, first_name, last_name 
 from actor
 where first_name = "Joe";
 
+#display all actors whose last name contains 'GEN'
 select * 
 from actor
 where last_name	like ('%GEN%');
 
+#display all actores whose last name contains 'LI' ordered by last & first name
 select * 
 from actor
 where last_name	like ('%LI%')
 order by last_name, first_name;
 
+
+#display id & name of given countries
 select country_id, country
 from country
 where country in ('Afghanistan', 'Bangladesh', 'China');
@@ -33,15 +41,19 @@ where country in ('Afghanistan', 'Bangladesh', 'China');
 
 
 /*************3. Alter table actor to add column & then delete the column**************/
+
+#create column description
 Alter table actor
 add column description blob;
 
+#delete column description
 Alter table actor
 drop column description;
 
 
 
 /*************4. Query & change actor names**************/
+
 #list last names and number of actors with same last name
 select last_name, count(last_name) as 'Number of actors'
 from actor
@@ -179,6 +191,76 @@ where film_id IN (
                     
 
 #list most frequently rented movies in desc
-select title, count(rental_id)
+select film.title, count(rental.rental_id) as 'Count'
 from film
-where film_id in select(
+inner join inventory
+on film.film_id = inventory.film_id
+inner join rental
+on inventory.inventory_id = rental.inventory_id
+group by film.title
+order by Count desc;
+
+
+#list how much $ each store has brought insert
+select address, sum(amount) as 'Total Amount($)'
+from address
+inner join store
+on address.address_id = store.address_id
+inner join payment
+on payment.staff_id = store.manager_staff_id
+group by address;
+
+
+#list stores with city & Country
+select store_id, city, country
+from store
+inner join address
+on store.address_id = address.address_id
+inner join city
+on city.city_id = address.city_id
+inner join country
+on country.country_id = city.country_id;
+
+
+#list top 5 revenue giving Genre
+select name, sum(amount) as GrossRevenue
+from category
+inner join film_category
+on category.category_id = film_category.category_id
+inner join inventory
+on film_category.film_id = inventory.film_id
+inner join rental
+on inventory.inventory_id = rental.inventory_id
+inner join payment
+on rental.rental_id = payment.rental_id
+group by category.name
+order by GrossRevenue DESC
+limit 5;
+
+
+/*************8. Views**************/
+
+#create view for top 5 revenue giving Genre
+create view v_topFiveGenre
+as (
+	select name, sum(amount) as GrossRevenue
+	from category
+	inner join film_category
+	on category.category_id = film_category.category_id
+	inner join inventory
+	on film_category.film_id = inventory.film_id
+	inner join rental
+	on inventory.inventory_id = rental.inventory_id
+	inner join payment
+	on rental.rental_id = payment.rental_id
+	group by category.name
+	order by GrossRevenue DESC
+	limit 5
+    );
+    
+
+#display data from view
+select * from v_topFiveGenre;
+
+#delete view
+drop view v_topFiveGenre;
