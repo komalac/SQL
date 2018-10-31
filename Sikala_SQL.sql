@@ -121,3 +121,64 @@ group by first_name, last_name
 order by last_name;
 
 
+/*************7. Sub Query**************/
+
+#list all movies starting with K & Q and language English
+select title 
+from film
+where title like 'K%' or title like 'Q%'
+and language_id = (
+					select language_id 
+                    from language 
+                    where name = 'English'
+                    );
+                    
+
+#list all actors in film Alone Trip
+select first_name, last_name
+from actor
+where actor_id IN (
+					select actor_id 
+                    from film_actor 
+                    where film_id = (
+									select film_id 
+									from film 
+                                    where title = 'Alone Trip'
+                                    )
+					);
+                    
+
+#list name & email of all Canadian customers
+select first_name, last_name, email from customer
+where address_id IN (
+					select address_id 
+                    from address
+                    inner join city
+                    on address.city_id = city.city_id 
+                    where city.country_id = (
+											select country_id 
+                                            from country 
+                                            where country = 'Canada'
+                                            )
+					);
+                    
+
+
+#list all movies categorized as Family movies
+select title 
+from film
+where film_id IN (
+					select film_id 
+                    from film_category 
+                    where category_id = (
+										select category_id 
+                                        from category 
+                                        where name = 'Family'
+                                        )
+					);
+                    
+
+#list most frequently rented movies in desc
+select title, count(rental_id)
+from film
+where film_id in select(
